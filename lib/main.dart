@@ -3,6 +3,15 @@ import 'package:qiita_search/screens/search_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // WebViewプラットフォームの初期化
+  // webview_flutter 4.0.0以降では自動的に初期化されるため、
+  // 古いバージョンを使用している場合のみ以下のコードが必要
+  // if (Platform.isAndroid) {
+  //   WebView.platform = AndroidWebView();
+  // }
+
   await dotenv.load(fileName: '.env');
   runApp(const MainApp());
 }
