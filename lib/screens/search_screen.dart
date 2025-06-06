@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http; // httpという変数を通して、httpパッケージにアクセス
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:qiita_search/models/article.dart';
+import 'package:qiita_search/widgets/article_container.dart';
+import 'package:qiita_search/models/user.dart';
 
 Future<List<Article>> searchQiita(String keyword) async {
   // 1. http通信に必要なデータを準備をする
@@ -39,11 +41,33 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  List<Article> articles = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Qiita Search')),
-      body: Container(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 36),
+            child: TextField(
+              style: TextStyle(fontSize: 18, color: Colors.black),
+              decoration: InputDecoration(hintText: '検索ワードを入力してください'),
+              onSubmitted: (String value) async {
+                final results = await searchQiita(value);
+                setState(() => articles = results);
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children: articles
+                  .map((article) => ArticleContainer(article: article))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
