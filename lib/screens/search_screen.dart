@@ -9,7 +9,7 @@ Future<List<Article>> searchQiita(String keyword) async {
   // 1. http通信に必要なデータを準備をする
   //   - URL、クエリパラメータの設定
   final uri = Uri.https('qiita.com', '/api/v2/items', {
-    'query': 'title:$keyword',
+    'query': keyword.isEmpty ? '' : 'title:$keyword', // キーワードが空の場合は全記事を取得
     'per_page': '10',
   });
   //   - アクセストークンの取得
@@ -42,6 +42,14 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   List<Article> articles = [];
   TextEditingController searchController = TextEditingController();
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 画面初回表示時に記事を読み込む
+    loadInitialArticles();
+  }
 
   @override
   void dispose() {
@@ -49,9 +57,23 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  // 初回表示時の記事読み込み
+  void loadInitialArticles() async {
+    setState(() => isLoading = true);
+    final results = await searchQiita(''); // 空文字で検索して最新記事を取得
+    setState(() {
+      articles = results;
+      isLoading = false;
+    });
+  }
+
   void performSearch() async {
+    setState(() => isLoading = true);
     final results = await searchQiita(searchController.text);
-    setState(() => articles = results);
+    setState(() {
+      articles = results;
+      isLoading = false;
+    });
     Navigator.pop(context); // ドロワーを閉じる
   }
 
@@ -111,13 +133,15 @@ class _SearchScreenState extends State<SearchScreen> {
       body: Column(
         children: [
           Expanded(
-            child: articles.isEmpty
-                ? const Center(child: Text('検索結果がここに表示されます'))
-                : ListView(
-                    children: articles
-                        .map((article) => ArticleContainer(article: article))
-                        .toList(),
-                  ),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : articles.isEmpty
+                    ? const Center(child: Text('記事が見つかりませんでした'))
+                    : ListView(
+                        children: articles
+                            .map((article) => ArticleContainer(article: article))
+                            .toList(),
+                      ),
           ),
         ],
       ),
